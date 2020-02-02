@@ -26,6 +26,9 @@ dependencies:
   cupertino_icons: ^0.1.2
   provider:
   location: ^2.3.5
+  great_circle_distance: ^1.0.1
+  geodesy: ^0.3.2
+  google_fonts: ^0.3.6
 
 dev_dependencies:
   flutter_test:
@@ -46,6 +49,10 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/julep1.jpg
+    - assets/pointer.jpg
+    - assets/try2.png
+    - assets/try3.png
+    - assets/try4.png
   #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

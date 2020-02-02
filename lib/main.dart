@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:orange_julep/datamodels/user_location.dart';
 import 'package:great_circle_distance/great_circle_distance.dart';
 import 'package:geodesy/geodesy.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 void main() => runApp(MyApp());
@@ -57,11 +58,6 @@ class _CompassState extends State<Compass> {
 
   void _onData(double x) => setState(() { _heading = x; });
 
-  final TextStyle _style = TextStyle(
-    color: Colors.red[50].withOpacity(0.9),
-    fontSize: 32,
-    fontWeight: FontWeight.w200,
-  );
 
   double calcBearing(double lat1, double lon1, double lat2, double lon2) {
     Geodesy geodesy = Geodesy();
@@ -96,9 +92,38 @@ class _CompassState extends State<Compass> {
     double lat2 = 45.495682;
     double lon2 = -73.656840;
 
-    double compassAngle = calcBearing(lat1, lon1, lat2, lon2)-_heading;
-    compassAngle = compassAngle.abs();
+    double _goalBearing = calcBearing(lat1, lon1, lat2, lon2);
+    double compassAngle = 360-(_goalBearing-_heading);
+//    if (compassAngle > 180) {
+//      compassAngle -= 180;
+//    }
 
+    final TextStyle _style = GoogleFonts.fredokaOne(
+      fontSize: 48,
+      fontWeight: FontWeight.normal
+    );
+
+//    return Container (
+//        child: new Stack(
+//          children: <Widget>[
+//            new Center(child: Text(calcDist(lat1, lon1, lat2, lon2),
+//            style: _style,)),
+//            new Transform.rotate(
+//              angle: 1.0,
+//              origin: Offset(357.0, 357.0),
+//              child: Container (
+//                height : 714.0,
+//                width : 714.0,
+//                child: Image(image: AssetImage('assets/try2.png')),
+//              )
+//            ),
+//            new Container(
+//              child: Image(image: AssetImage('assets/try2.png'))
+//            )
+//
+//          ]
+//      )
+//    );
     return CustomPaint(
         foregroundPainter: CompassPainter(angle: compassAngle),
         child: Center(child: Text(calcDist(lat1, lon1, lat2, lon2), style: _style))
@@ -115,7 +140,8 @@ class CompassPainter extends CustomPainter {
 
   Paint get _brush => new Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 2.0;
+    ..strokeWidth = 15.0
+    ..strokeCap = StrokeCap.round;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -124,7 +150,8 @@ class CompassPainter extends CustomPainter {
       ..color = Colors.indigo[400].withOpacity(0.6);
 
     Paint needle = _brush
-      ..color = Colors.red[400];
+//      ..color = Colors.red;
+      ..color = Colors.lightGreen[800];
 
     double radius = min(size.width / 2.2, size.height / 2.2);
     Offset center = Offset(size.width / 2, size.height / 2);
@@ -135,7 +162,7 @@ class CompassPainter extends CustomPainter {
     canvas.rotate(rotation);
     canvas.translate(-center.dx, -center.dy);
     canvas.drawLine(start, end, needle);
-    canvas.drawCircle(center, radius, circle);
+//    canvas.drawCircle(center, radius, circle);
   }
 
   @override
