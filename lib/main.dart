@@ -1,32 +1,39 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:orange_julep/services/location_service.dart';
+import 'package:provider/provider.dart';
+import 'package:orange_julep/datamodels/user_location.dart';
+import 'package:great_circle_distance/great_circle_distance.dart';
+import 'package:geodesy/geodesy.dart';
+
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) => MaterialApp(
-      title: 'Flutter Compass Demo',
-      theme: ThemeData(brightness: Brightness.dark),
-      darkTheme: ThemeData.dark(),
-      home: Scaffold(
-        body: Container(
-          child: Compass(),
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/julep1.jpg"),
-              fit: BoxFit.cover,
-            ),
-          ),
-        )
-
-
-//          appBar: AppBar(title: Text('Flutter Compass Demo')),
-//          backgroundColor: Colors.black,
-
+  Widget build(BuildContext context) {
+    return StreamProvider<UserLocation>(
+      create: (context) => LocationService().locationStream,
+      child: MaterialApp(
+          title: 'Flutter Compass Demo',
+          theme: ThemeData(brightness: Brightness.dark),
+          darkTheme: ThemeData.dark(),
+          home: Scaffold(
+              body: Container(
+                child: Compass(),
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage("assets/julep1.jpg"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+          )
       )
-  );
+    );
+  }
 }
 
 class Compass extends StatefulWidget {
@@ -38,10 +45,8 @@ class Compass extends StatefulWidget {
 }
 
 class _CompassState extends State<Compass> {
-
+  bool _metric = true;
   double _heading = 0;
-
-  String get _readout => _heading.toStringAsFixed(0) + '°';
 
   @override
   void initState() {
@@ -58,12 +63,45 @@ class _CompassState extends State<Compass> {
     fontWeight: FontWeight.w200,
   );
 
+  double calcBearing(double lat1, double lon1, double lat2, double lon2) {
+    Geodesy geodesy = Geodesy();
+    LatLng l1 = LatLng(lat1, lon1);
+    LatLng l2 = LatLng(lat2, lon2);
+    
+    double bearing = Geodesy().bearingBetweenTwoGeoPoints(l1, l2);
+    return bearing;
+  }
+  String calcDist(double lat1, double lon1, double lat2, double lon2) {
+    var gcd = new GreatCircleDistance.fromDegrees(latitude1: lat1, longitude1: lon1, latitude2: lat2, longitude2: lon2);
+    double dist = gcd.haversineDistance();
+    String _formattedDist;
+
+    if (dist >= 500) {
+      _formattedDist = (dist/1000).toStringAsFixed(1) + " km";
+    }
+    else {
+      _formattedDist = (dist).toStringAsFixed(1) + " km";
+    }
+
+    return _formattedDist;
+  }
+
   @override
   Widget build(BuildContext context) {
 
+    var userLocation = Provider.of<UserLocation>(context);
+
+    double lat1 = userLocation?.latitude;
+    double lon1 = userLocation?.longitude;
+    double lat2 = 45.495682;
+    double lon2 = -73.656840;
+
+    double compassAngle = calcBearing(lat1, lon1, lat2, lon2)-_heading;
+    compassAngle = compassAngle.abs();
+
     return CustomPaint(
-        foregroundPainter: CompassPainter(angle: _heading),
-        child: Center(child: Text(_readout, style: _style))
+        foregroundPainter: CompassPainter(angle: compassAngle),
+        child: Center(child: Text(calcDist(lat1, lon1, lat2, lon2), style: _style))
     );
   }
 }
@@ -103,3 +141,5 @@ class CompassPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
+
+
